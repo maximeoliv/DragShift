@@ -27,7 +27,7 @@ ajouter un fond, détourer…
 vidéo, l'audio). Ça marche avec **plusieurs fichiers sélectionnés** : plusieurs images vers PDF, DragShift demande s'il
 faut faire *un seul PDF* ou *un PDF par image*.
 
-<p align="center"><img src="docs/clic-droit-win11.png" width="590" alt="Menu clic droit de Windows 11 : Convertir en, Modifier l'image › Rogner, Compresser…"></p>
+<p align="center"><img src="docs/demo-clic-droit.gif" width="720" alt="Démo dans l'Explorateur de Windows 11 : 3 photos sélectionnées, clic droit › Convertir en › PDF › Un seul PDF ; puis clic droit sur une photo › Modifier l'image › Rogner… › 1:1 › Appliquer"></p>
 
 > **Windows 11** : les entrées sont directement dans le nouveau menu si le **mode développeur** est activé
 > (*Paramètres › Système › Espace développeurs*), voir [pourquoi](#bon-à-savoir). Sinon, et sous Windows 10, elles

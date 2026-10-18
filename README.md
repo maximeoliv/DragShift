@@ -5,103 +5,105 @@
 <h1 align="center">DragShift</h1>
 
 <p align="center">
-  Convertis n'importe quel fichier en le glissant… et en appuyant sur <b>Shift</b>.<br>
-  Ou tout simplement : <b>clic droit › Convertir en</b>.
+  Convert any file by dragging it… and pressing <b>Shift</b>.<br>
+  Or just: <b>right-click › Convert to</b>.
 </p>
+
+<p align="center"><b>English</b> · <a href="README.fr.md">Français</a></p>
 
 <p align="center">
-  <img src="docs/demo.gif" width="720" alt="Démo : on glisse une image, on appuie sur Shift, un menu rond apparaît, on lâche sur JPG">
+  <img src="docs/en/demo.gif" width="720" alt="Demo: drag an image, press Shift, a round menu appears, drop the image on JPG">
 </p>
 
-## Comment ça marche
+## How it works
 
-**1. Glisser + Shift.** Attrape un fichier (Explorateur, Bureau…), appuie sur **Shift** pendant le glisser : un menu rond
-apparaît sous la souris. Lâche le fichier sur un format, le fichier converti est créé à côté de l'original.
+**1. Drag + Shift.** Grab a file (File Explorer, desktop…) and press **Shift** while dragging: a round menu appears
+under the mouse. Drop the file on a format, and the converted file is created next to the original.
 
-**2. Réappuie sur Shift** (ou reste une demi-seconde sur le centre) pour passer aux **outils** : rogner, compresser,
-ajouter un fond, détourer…
+**2. Press Shift again** (or rest on the center for half a second) to switch to the **tools**: crop, compress,
+add a background, remove the background…
 
-<p align="center"><img src="docs/menus.png" width="720" alt="Les deux anneaux du menu : formats et outils"></p>
+<p align="center"><img src="docs/en/menus.png" width="720" alt="The two rings of the menu: formats and tools"></p>
 
-**3. Ou au clic droit**, sans rien savoir de tout ça : **Convertir en ›** et **Modifier l'image ›** (ou le PDF, la
-vidéo, l'audio). Ça marche avec **plusieurs fichiers sélectionnés** : plusieurs images vers PDF, DragShift demande s'il
-faut faire *un seul PDF* ou *un PDF par image*.
+**3. Or right-click**, no gesture to remember: **Convert to ›** and **Edit image ›** (or PDF, video, audio).
+It works with **several selected files**: for several images to PDF, DragShift asks whether you want *one PDF*
+or *one PDF per image*.
 
-<p align="center"><img src="docs/demo-clic-droit.gif" width="720" alt="Démo dans l'Explorateur de Windows 11 : 3 photos sélectionnées, clic droit › Convertir en › PDF › Un seul PDF ; puis clic droit sur une photo › Modifier l'image › Rogner… › 1:1 › Appliquer"></p>
+<p align="center"><img src="docs/en/demo-right-click.gif" width="720" alt="Demo in the Windows 11 File Explorer: 3 photos selected, right-click › Convert to › PDF › One PDF; then right-click a photo › Edit image › Crop… › 1:1 › Apply"></p>
 
-> **Windows 11** : les entrées sont directement dans le nouveau menu si le **mode développeur** est activé
-> (*Paramètres › Système › Espace développeurs*), voir [pourquoi](#bon-à-savoir). Sinon, et sous Windows 10, elles
-> sont dans le menu classique (*Afficher d'autres options*, ou directement avec **Shift + clic droit**).
+> **Windows 11:** the entries show up directly in the new menu if **Developer Mode** is on
+> (*Settings › System › For developers*), see [why](#good-to-know). Otherwise, and on Windows 10, they are in the
+> classic menu (*Show more options*, or straight away with **Shift + right-click**).
 
-L'original n'est jamais modifié ni déplacé. Tout se fait **en local**, rien n'est envoyé sur Internet.
+The original file is never changed or moved. Everything runs **locally**, nothing is sent over the Internet.
 
-## Ce que ça sait faire
+## What it can do
 
-| Fichier | Convertir en | Outils |
+| File | Convert to | Tools |
 |---|---|---|
-| **Image** (PNG, JPG, WEBP, AVIF, HEIC, GIF, TIFF, BMP, ICO…) | PNG, JPG, WEBP, AVIF, PDF, ICO, BMP, TIFF, GIF | Rogner, Compresser, Ajouter un fond, Détourer (IA), Pivoter, Supprimer les métadonnées, Éditer dans Paint |
-| **PDF** | Word (DOCX), TXT, JPG, PNG | Compresser, Pivoter, Fusionner plusieurs PDF |
+| **Image** (PNG, JPG, WEBP, AVIF, HEIC, GIF, TIFF, BMP, ICO…) | PNG, JPG, WEBP, AVIF, PDF, ICO, BMP, TIFF, GIF | Crop, Compress, Add a background, Remove background (AI), Rotate, Remove metadata, Edit in Paint |
+| **PDF** | Word (DOCX), TXT, JPG, PNG | Compress, Rotate, Merge several PDFs |
 | **Word / LibreOffice** (DOCX, DOC, ODT, RTF) | PDF, DOCX, ODT, TXT, Markdown, HTML | — |
 | **PowerPoint / Excel** | PDF, PPTX/ODP, XLSX/ODS/CSV | — |
-| **Texte** (MD, TXT, HTML) | Word, PDF, HTML, Markdown, TXT | — |
-| **Vidéo** (MP4, MOV, MKV, WEBM, AVI…) | MP4, WEBM, MOV, MKV, GIF animé, MP3, WAV | Compresser, 720p, Couper le son, Miniature, Transcrire en sous-titres (IA) |
-| **Audio** (MP3, WAV, FLAC, OGG, M4A, OPUS…) | MP3, WAV, FLAC, OGG, M4A, OPUS | Normaliser le volume, Compresser, Transcrire (IA) |
+| **Text** (MD, TXT, HTML) | Word, PDF, HTML, Markdown, TXT | — |
+| **Video** (MP4, MOV, MKV, WEBM, AVI…) | MP4, WEBM, MOV, MKV, animated GIF, MP3, WAV | Compress, 720p, Mute, Thumbnail, Transcribe to subtitles (AI) |
+| **Audio** (MP3, WAV, FLAC, OGG, M4A, OPUS…) | MP3, WAV, FLAC, OGG, M4A, OPUS | Normalize volume, Compress, Transcribe (AI) |
 
 <p align="center">
-  <img src="docs/rogner.png" width="360" alt="Fenêtre Rogner">
-  <img src="docs/fond.png" width="360" alt="Fenêtre Ajouter un fond">
+  <img src="docs/en/crop.png" width="360" alt="Crop window">
+  <img src="docs/en/background.png" width="360" alt="Add a background window">
 </p>
 
 ## Installation
 
-Windows 10 ou 11, et [Python 3.10+](https://www.python.org/downloads/).
+Windows 10 or 11, and [Python 3.10+](https://www.python.org/downloads/).
 
 ```powershell
-# 1. Les moteurs de conversion (ImageMagick et ffmpeg sont indispensables, le reste est optionnel)
+# 1. The conversion engines (ImageMagick and ffmpeg are required, the rest is optional)
 winget install ImageMagick.ImageMagick Gyan.FFmpeg
-winget install TheDocumentFoundation.LibreOffice JohnMacFarlane.Pandoc   # documents Office / texte
+winget install TheDocumentFoundation.LibreOffice JohnMacFarlane.Pandoc   # Office / text documents
 
 # 2. DragShift
 git clone https://github.com/maximeoliv/DragShift
 cd DragShift
 py -m pip install -r requirements.txt
 
-# 3. Ajoute le clic droit + le lancement au démarrage, et démarre
+# 3. Add the right-click menu + start with Windows, and launch it
 pyw dragshift.pyw --install
 ```
 
-Pour avoir les entrées dans le **nouveau menu de Windows 11**, active le mode développeur *avant* l'étape 3
-(*Paramètres › Système › Espace développeurs › Mode développeur*). Sans lui, tout marche quand même, via le menu
-classique.
+To get the entries in the **new Windows 11 menu**, turn on Developer Mode *before* step 3
+(*Settings › System › For developers › Developer Mode*). Without it, everything still works through the classic menu.
 
-Une icône apparaît dans la barre des tâches (près de l'horloge) : activer/désactiver, clic droit, démarrage auto, aide.
+An icon appears in the taskbar (near the clock): turn it on/off, right-click menu, start with Windows, help.
 
-**Optionnel :** `py -m pip install rembg` pour *Détourer*, `py -m pip install faster-whisper` pour *Transcrire* (utilise la carte
-graphique NVIDIA si elle est disponible).
+**Optional:** `py -m pip install rembg` for *Remove background*, `py -m pip install faster-whisper` for *Transcribe*
+(uses an NVIDIA graphics card if there is one).
 
-**Désinstaller :** `py dragshift.pyw --uninstall` retire le clic droit et le démarrage auto, puis supprime le dossier.
+**Uninstall:** `py dragshift.pyw --uninstall` removes the right-click menu and the autostart, then delete the folder.
 
-## Bon à savoir
+## Good to know
 
-- **Pourquoi le mode développeur pour le menu de Windows 11 ?** Le nouveau menu n'accepte que les extensions
-  livrées dans un paquet Windows signé. DragShift enregistre un petit paquet local non signé
-  ([`winmenu/`](winmenu/) : une DLL C++ et son code source), ce que Windows n'autorise qu'en mode développeur.
-  Les binaires sont fournis ; pour les recompiler : [`winmenu/build.sh`](winmenu/build.sh) avec
-  [llvm-mingw](https://github.com/mstorsjo/llvm-mingw).
+- **Language:** the interface is in English, or in French if Windows is in French. To force it:
+  `setx DRAGSHIFT_LANG en` (or `fr`), quit DragShift (icon near the clock › Quit), then start it again from a
+  **new** terminal with `pyw dragshift.pyw`. The right-click menu updates by itself.
+- **Why Developer Mode for the Windows 11 menu?** The new menu only accepts extensions shipped in a signed Windows
+  package. DragShift registers a small, unsigned local package ([`winmenu/`](winmenu/): a C++ DLL and its source
+  code), which Windows only allows in Developer Mode. The binaries are included; to rebuild them:
+  [`winmenu/build.sh`](winmenu/build.sh) with [llvm-mingw](https://github.com/mstorsjo/llvm-mingw).
+- **FancyZones (PowerToys)** also uses Shift while you move a window: no conflict, DragShift only opens during an
+  actual file drag and drop.
+- **Shift while dragging** normally means "move" to File Explorer: DragShift always answers "copy", so your file
+  stays where it is.
+- Output files are named like in the demo: `Photo.jpg`, `Photo Compressed.png`, `Photo Cropped.png`,
+  `img01 and 20 others.pdf`… and an existing file is never overwritten.
 
-- **FancyZones (PowerToys)** utilise aussi Shift pendant qu'on déplace une fenêtre : pas de conflit, DragShift ne
-  s'ouvre que pendant un vrai glisser-déposer de fichier.
-- **Shift pendant un glisser** veut normalement dire « déplacer » pour l'Explorateur : DragShift répond toujours
-  « copier », ton fichier reste à sa place.
-- Les fichiers produits sont nommés comme dans la démo : `Photo.jpg`, `Photo Compressed.png`, `Photo Cropped.png`,
-  `img01 et 20 autres.pdf`… sans jamais écraser un fichier existant.
+## Where the idea comes from
 
-## D'où vient l'idée
+The "drag + Shift" gesture comes from [**Tangerine**](https://tangerineformac.com/), a Mac app made by
+[thameem (@th2049)](https://x.com/th2049). DragShift is an independent reimplementation for Windows, written from
+scratch and not affiliated with Tangerine. **If you're on a Mac, use the original.**
 
-Le geste « glisser + Shift » vient de [**Tangerine**](https://tangerineformac.com/), une app Mac créée par
-[thameem (@th2049)](https://x.com/th2049). DragShift est une réimplémentation indépendante pour Windows, écrite de zéro
-et sans lien avec Tangerine. **Si tu es sur Mac, utilise l'original.**
-
-## Licence
+## License
 
 [MIT](LICENSE).

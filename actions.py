@@ -6,6 +6,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from i18n import LANG, tr
+
 NO_WINDOW = 0x08000000  # CREATE_NO_WINDOW
 HERE = Path(__file__).resolve().parent
 
@@ -46,12 +48,13 @@ ICONS = {
     "normalize": "\uE767",
 }
 
-TOOL_LABELS = {
-    "compress": "COMPRESSER", "crop": "ROGNER", "addbg": "FOND", "rembg": "DÉTOURER",
-    "exif": "EXIF", "rotate": "ROTATION", "edit": "ÉDITER", "merge": "FUSIONNER",
-    "mute": "MUET", "720p": "720P", "thumb": "MINIATURE", "transcribe": "TRANSCRIRE",
-    "normalize": "NORMALISER",
-}
+# noms courts : en majuscules sur l'anneau du menu radial, tels quels au centre et dans les notifications
+TOOL_LABELS = {k: tr(v) for k, v in {
+    "compress": "Compresser", "crop": "Rogner", "addbg": "Fond", "rembg": "Détourer",
+    "exif": "EXIF", "rotate": "Rotation", "edit": "Éditer", "merge": "Fusionner",
+    "mute": "Muet", "720p": "720p", "thumb": "Miniature", "transcribe": "Transcrire",
+    "normalize": "Normaliser",
+}.items()}
 
 INTERACTIVE = {"crop", "addbg"}
 
@@ -114,9 +117,10 @@ def unique(path):
 
 
 def human(n):
-    for u in ("o", "Ko", "Mo", "Go"):
-        if n < 1024 or u == "Go":
-            return f"{n:.0f} {u}" if u == "o" else f"{n:.1f} {u}".replace(".0 ", " ")
+    units = ("o", "Ko", "Mo", "Go") if LANG == "fr" else ("B", "KB", "MB", "GB")
+    for u in units:
+        if n < 1024 or u == units[-1]:
+            return f"{n:.0f} {u}" if u == units[0] else f"{n:.1f} {u}".replace(".0 ", " ")
         n /= 1024
 
 
@@ -125,7 +129,7 @@ def run(cmd, timeout=3600):
                        errors="replace", creationflags=NO_WINDOW, timeout=timeout)
     if r.returncode != 0:
         tail = (r.stderr or r.stdout or "").strip().splitlines()[-3:]
-        raise RuntimeError(f"{Path(str(cmd[0])).stem} a échoué : " + " | ".join(tail))
+        raise RuntimeError(tr("{tool} a échoué : ", tool=Path(str(cmd[0])).stem) + " | ".join(tail))
     return r
 
 
@@ -158,7 +162,7 @@ def convert(src, fmt):
         return [_text_to(src, fmt)]
     if cat in ("video", "audio"):
         return [_av_to(src, fmt)]
-    raise RuntimeError("Type de fichier non géré")
+    raise RuntimeError(tr("Type de fichier non géré"))
 
 
 def natural_key(p):
@@ -174,8 +178,8 @@ def images_to_pdf(paths, out=None):
     if out is None:
         first = paths[0]
         n = len(paths) - 1
-        out = out_path(first, ext="pdf") if not n else \
-            unique(first.with_name(f"{first.stem} et {n} autre{'s' if n > 1 else ''}.pdf"))
+        name = tr("{stem} et {n} autres.pdf" if n > 1 else "{stem} et {n} autre.pdf", stem=first.stem, n=n)
+        out = out_path(first, ext="pdf") if not n else unique(first.with_name(name))
     doc = fitz.open()
     tmp = Path(tempfile.mkdtemp(prefix="dragshift-"))
     try:
@@ -255,7 +259,7 @@ def _soffice(src, filt, ext):
              "--convert-to", filt, "--outdir", tmp, src], timeout=600)
         produced = list(tmp.glob(f"*.{ext}"))
         if not produced:
-            raise RuntimeError("LibreOffice n'a rien produit")
+            raise RuntimeError(tr("LibreOffice n'a rien produit"))
         out = out_path(src, ext=ext)
         shutil.move(str(produced[0]), out)
         return out
@@ -402,12 +406,12 @@ def _tool_one(src, key):
                         out_path(src, " Normalized"))]
         if key == "compress":
             return [_ff(src, ["-vn", "-c:a", "libmp3lame", "-b:a", "128k"], out_path(src, " Compressed", "mp3"))]
-    raise RuntimeError(f"Outil « {key} » indisponible pour .{e}")
+    raise RuntimeError(tr("Outil « {key} » indisponible pour .{ext}", key=key, ext=e))
 
 
 def _pdf_merge(paths):
     import fitz
-    out = unique(Path(paths[0]).with_name("Fusion.pdf"))
+    out = unique(Path(paths[0]).with_name(tr("Fusion.pdf")))
     merged = fitz.open()
     for p in paths:
         merged.insert_pdf(fitz.open(p))

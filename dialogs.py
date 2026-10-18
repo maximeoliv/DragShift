@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (QButtonGroup, QColorDialog, QDialog, QGridLayout,
                                QPushButton, QSlider, QSpinBox, QVBoxLayout, QWidget)
 
 import actions
+from i18n import tr
 
 ACCENT = "#5b54f0"
 
@@ -135,7 +136,7 @@ class Panel(QDialog):
 
 # ======================================================================= Rogner
 
-RATIOS = [("Libre", None), ("1:1", 1.0), ("16:9", 16 / 9), ("9:16", 9 / 16), ("4:3", 4 / 3), ("3:4", 3 / 4)]
+RATIOS = [(tr("Libre"), None),("1:1", 1.0), ("16:9", 16 / 9), ("9:16", 9 / 16), ("4:3", 4 / 3), ("3:4", 3 / 4)]
 
 
 class CropView(QWidget):
@@ -307,17 +308,17 @@ class CropView(QWidget):
 
 class CropDialog(Panel):
     def __init__(self, path, on_done):
-        super().__init__("Rogner l'image")
+        super().__init__(tr("Rogner l'image"))
         self.path = Path(path)
         self.on_done = on_done
         img = load_qimage(path)
         if img.isNull():
-            raise RuntimeError("Impossible d'ouvrir l'image")
+            raise RuntimeError(tr("Impossible d'ouvrir l'image"))
         self.view = CropView(img)
         self.body.addWidget(self.view, 1)
 
         row = QHBoxLayout()
-        row.addWidget(QLabel("Ratio", objectName="muted"))
+        row.addWidget(QLabel(tr("Ratio"), objectName="muted"))
         self.group = QButtonGroup(self)
         for i, (name, val) in enumerate(RATIOS):
             b = QPushButton(name, checkable=True)
@@ -331,13 +332,13 @@ class CropDialog(Panel):
         row2 = QHBoxLayout()
         self.w = QSpinBox(maximum=img.width(), minimum=10, suffix=" px")
         self.h = QSpinBox(maximum=img.height(), minimum=10, suffix=" px")
-        row2.addWidget(QLabel("L"))
+        row2.addWidget(QLabel(tr("L")))
         row2.addWidget(self.w)
-        row2.addWidget(QLabel("H"))
+        row2.addWidget(QLabel(tr("H")))
         row2.addWidget(self.h)
         row2.addStretch()
-        reset = QPushButton("Réinitialiser", clicked=self.reset)
-        apply = QPushButton("Appliquer", objectName="primary", clicked=self.accept_action)
+        reset = QPushButton(tr("Réinitialiser"), clicked=self.reset)
+        apply = QPushButton(tr("Appliquer"), objectName="primary", clicked=self.accept_action)
         row2.addWidget(reset)
         row2.addWidget(apply)
         self.body.addLayout(row2)
@@ -375,7 +376,7 @@ class CropDialog(Panel):
         out = actions.out_path(self.path, " Cropped", ext)
         ok = self.view.img.copy(r).save(str(out), quality=95)
         self.accept()
-        self.on_done([out] if ok else [], None if ok else "Échec de l'enregistrement")
+        self.on_done([out] if ok else [], None if ok else tr("Échec de l'enregistrement"))
 
 
 # ======================================================================= Fond
@@ -462,12 +463,12 @@ def _swatch_css(spec):
 
 class AddBgDialog(Panel):
     def __init__(self, path, on_done):
-        super().__init__("Ajouter un fond")
+        super().__init__(tr("Ajouter un fond"))
         self.path = Path(path)
         self.on_done = on_done
         q = load_qimage(path)
         if q.isNull():
-            raise RuntimeError("Impossible d'ouvrir l'image")
+            raise RuntimeError(tr("Impossible d'ouvrir l'image"))
         q = q.convertToFormat(QImage.Format_RGBA8888)
         self.src = Image.frombuffer("RGBA", (q.width(), q.height()), bytes(q.constBits()), "raw", "RGBA",
                                     q.bytesPerLine(), 1).copy()
@@ -499,19 +500,19 @@ class AddBgDialog(Panel):
         pick.setFixedSize(26, 26)
         grid.addWidget(pick, 1, 8)
         bgrow = QHBoxLayout()
-        bgrow.addWidget(QLabel("Fond", objectName="muted"))
+        bgrow.addWidget(QLabel(tr("Fond"), objectName="muted"))
         bgrow.addLayout(grid)
         bgrow.addStretch()
         self.body.addLayout(bgrow)
 
         m = max(self.src.size)
         self.sl = {}
-        for key, label, mx, val in (("pad", "Marge", m // 2, int(m * 0.08)),
-                                    ("rad", "Coins", min(self.src.size) // 4, int(m * 0.025)),
-                                    ("shadow", "Ombre", 100, 45)):
+        for key, label, mx, val in (("pad", tr("Marge"), m // 2, int(m * 0.08)),
+                                    ("rad", tr("Coins"), min(self.src.size) // 4, int(m * 0.025)),
+                                    ("shadow", tr("Ombre"), 100, 45)):
             row = QHBoxLayout()
             lab = QLabel(label, objectName="muted")
-            lab.setFixedWidth(48)
+            lab.setFixedWidth(56)
             s = QSlider(Qt.Horizontal, maximum=mx, value=val)
             v = QLabel()
             v.setFixedWidth(60)
@@ -526,7 +527,7 @@ class AddBgDialog(Panel):
             self.sl[key] = s
 
         row = QHBoxLayout()
-        row.addWidget(QLabel("Ratio", objectName="muted"))
+        row.addWidget(QLabel(tr("Ratio"), objectName="muted"))
         self.rgroup = QButtonGroup(self)
         for i, (name, val) in enumerate([("Auto", None), ("1:1", 1.0), ("16:9", 16 / 9), ("9:16", 9 / 16),
                                          ("4:5", 4 / 5)]):
@@ -536,7 +537,7 @@ class AddBgDialog(Panel):
             self.rgroup.addButton(b)
             row.addWidget(b)
         row.addStretch()
-        row.addWidget(QPushButton("Enregistrer avec le fond", objectName="primary", clicked=self.accept_action))
+        row.addWidget(QPushButton(tr("Enregistrer avec le fond"), objectName="primary", clicked=self.accept_action))
         self.body.addLayout(row)
         self.refresh()
 
@@ -578,14 +579,14 @@ class PdfChoiceDialog(Panel):
     """Plusieurs images -> PDF : un PDF par image, ou toutes les images dans un seul PDF."""
 
     def __init__(self, n, on_choice):
-        super().__init__(f"Convertir {n} images en PDF")
+        super().__init__(tr("Convertir {n} images en PDF", n=n))
         self.on_choice = on_choice
-        info = QLabel("Comment veux-tu les regrouper ?", objectName="muted", alignment=Qt.AlignCenter)
+        info = QLabel(tr("Comment veux-tu les regrouper ?"), objectName="muted", alignment=Qt.AlignCenter)
         self.body.addWidget(info)
         row = QHBoxLayout()
         row.setSpacing(12)
-        for label, sub, single in ((f"Un seul PDF", f"{n} pages, une image par page", True),
-                                   (f"Un PDF par image", f"{n} fichiers PDF séparés", False)):
+        for label, sub, single in ((tr("Un seul PDF"), tr("{n} pages, une image par page", n=n), True),
+                                   (tr("Un PDF par image"), tr("{n} fichiers PDF séparés", n=n), False)):
             b = QPushButton(f"{label}\n{sub}", objectName="primary" if single else "")
             b.setMinimumSize(210, 64)
             b.clicked.connect(lambda _=False, s=single: self._choose(s))

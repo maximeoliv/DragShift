@@ -3,7 +3,8 @@
 Pendant un glisser-déposer (Explorateur, Bureau…), appuie sur Shift : un menu radial
 apparaît sous le curseur. Lâche le fichier sur un format pour le convertir à côté de
 l'original. Réappuie sur Shift (ou survole le centre) pour basculer « Formats » / « Outils ».
-Le même menu s'ouvre aussi au clic droit sur un fichier (entrée « DragShift »).
+Le clic droit sur un fichier propose les mêmes actions (« Convertir en ▸ », « Modifier l'image ▸ »…).
+L'interface est en français si Windows est en français, en anglais sinon (voir i18n.py).
 """
 import ctypes
 from ctypes import wintypes
@@ -11,6 +12,7 @@ import math
 import os
 import subprocess
 import sys
+import threading
 import time
 import traceback
 import winreg
@@ -27,6 +29,7 @@ from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon, QWidget
 
 import actions
 import shellmenu
+from i18n import tr
 
 APP = "DragShift"
 REPO_URL = "https://github.com/maximeoliv/DragShift"  # ouverte par « Comment ça marche ? »
@@ -80,7 +83,7 @@ class Radial(QWidget):
             self.setAcceptDrops(True)
         self.setFixedSize(self.SIDE, self.SIDE)
         self.files, self.segments, self.mode, self.hover, self.tools = [], [], "formats", None, []
-        self.status = "Bouge le fichier…"
+        self.status = tr("Bouge le fichier…")
         self.center_timer = QElapsedTimer()
         self.center_armed = True
         fams = QFontDatabase.families()
@@ -96,7 +99,7 @@ class Radial(QWidget):
     # ---------------------------------------------------------- cycle de vie
     def popup(self, paths=None):
         self.files, self.segments, self.mode, self.hover, self.tools = [], [], "formats", None, []
-        self.status = "Bouge le fichier…"
+        self.status = tr("Bouge le fichier…")
         if paths:
             self._load(paths)
         self.center_armed = False  # le menu s'ouvre sous le curseur : pas de bascule tant qu'on n'est pas sorti du centre
@@ -129,11 +132,11 @@ class Radial(QWidget):
             return  # nouveau DragEnter pour les mêmes fichiers : on garde le mode courant
         self.files = paths
         if not paths:
-            self.status = "Aucun fichier local"
+            self.status = tr("Aucun fichier local")
             self.segments = []
             return
         if actions.category(paths[0]) is None:
-            self.status = f".{actions.ext_of(paths[0])} non géré"
+            self.status = tr(".{ext} non géré", ext=actions.ext_of(paths[0]))
             self.segments = []
             return
         self.formats = [("convert", f, f.upper(), None) for f in actions.formats_for(paths[0])]
@@ -329,10 +332,10 @@ class Radial(QWidget):
                 p.setFont(f_icon)
                 p.drawText(QRectF(pc.x() - 30, pc.y() - 24, 60, 24), Qt.AlignCenter, icon)
                 p.setFont(QFont("Segoe UI Variable Display", 8, QFont.DemiBold))
-                p.drawText(QRectF(pc.x() - 50, pc.y() + 1, 100, 16), Qt.AlignCenter, label)
+                p.drawText(QRectF(pc.x() - 50, pc.y() + 1, 100, 16), Qt.AlignCenter, label.upper())
             else:
                 p.setFont(f_label)
-                p.drawText(QRectF(pc.x() - 50, pc.y() - 10, 100, 20), Qt.AlignCenter, label)
+                p.drawText(QRectF(pc.x() - 50, pc.y() - 10, 100, 20), Qt.AlignCenter, label.upper())
 
         if not n:  # anneau vide en attendant le DragEnter
             p.setBrush(QColor(250, 250, 255, 120))
@@ -350,13 +353,13 @@ class Radial(QWidget):
 
         if isinstance(self.hover, int) and self.hover < n:
             kind, key, label, _ = self.segments[self.hover]
-            title = f"→ {label}" if kind == "convert" else label.capitalize()
+            title = f"→ {label}" if kind == "convert" else label
             sub = self.status
         else:
             title = self.status
             sub = ""
             if self.files:
-                sub = f"{len(self.files)} fichiers" if len(self.files) > 1 else \
+                sub = tr("{n} fichiers", n=len(self.files)) if len(self.files) > 1 else \
                     f".{actions.ext_of(self.files[0])}"
         p.setPen(QColor(255, 255, 255))
         p.setFont(QFont("Segoe UI Variable Display", 12 if len(title) < 10 else 9, QFont.Bold))
@@ -370,8 +373,8 @@ class Radial(QWidget):
         p.drawText(QRectF(c.x() - RC, c.y() + 2, 2 * RC, 16), Qt.AlignCenter, sub)
         if self.files and self.tools:
             # indice visible : comment passer à l'autre anneau (c'est là que sont Rogner, Fond…)
-            other = "Outils" if self.mode == "formats" else "Formats"
-            hint = f"clic : {other}" if self.interactive else f"⇧ {other}"
+            other = tr("Outils") if self.mode == "formats" else tr("Formats")
+            hint = tr("clic : {other}", other=other) if self.interactive else f"⇧ {other}"
             p.setFont(QFont("Segoe UI Variable Text", 7, QFont.DemiBold))
             w = p.fontMetrics().horizontalAdvance(hint) + 14
             pill = QRectF(c.x() - w / 2, c.y() + 20, w, 15)
@@ -588,32 +591,32 @@ class App(QObject):
 
     def _tray(self):
         self.tray = QSystemTrayIcon(self._icon(), self)
-        self.tray.setToolTip(f"{APP} — glisse un fichier + Shift")
+        self.tray.setToolTip(f"{APP} — {tr('glisse un fichier + Shift')}")
         m = QMenu()
-        self.a_enabled = QAction("Activé", m, checkable=True, checked=True)
+        self.a_enabled = QAction(tr("Activé"), m, checkable=True, checked=True)
         self.a_enabled.toggled.connect(lambda v: setattr(self.watcher, "enabled", v))
-        self.a_boot = QAction("Lancer au démarrage de Windows", m, checkable=True, checked=autostart_enabled())
+        self.a_boot = QAction(tr("Lancer au démarrage de Windows"), m, checkable=True, checked=autostart_enabled())
         self.a_boot.toggled.connect(set_autostart)
-        self.a_shell = QAction("Entrée « DragShift » au clic droit", m, checkable=True,
+        self.a_shell = QAction(tr("« Convertir en » au clic droit"), m, checkable=True,
                                checked=shellmenu.is_installed())
         self.a_shell.toggled.connect(lambda v: shellmenu.install() if v else shellmenu.uninstall(modern=True))
         m.addAction(self.a_enabled)
         m.addAction(self.a_boot)
         m.addAction(self.a_shell)
         m.addSeparator()
-        m.addAction("Comment ça marche ?", self.show_help)
+        m.addAction(tr("Comment ça marche ?"), self.show_help)
         m.addSeparator()
-        m.addAction("Quitter", self.qapp.quit)
+        m.addAction(tr("Quitter"), self.qapp.quit)
         self.menu = m
         self.tray.setContextMenu(m)
         self.tray.messageClicked.connect(self._reveal)
         self.tray.show()
 
     def show_help(self):
-        self.notify("DragShift — mode d'emploi",
-                    "1. Glisse un fichier + Shift, lâche-le sur un format.\n"
-                    "2. Réappuie sur Shift : outils (Rogner, Fond, Compresser…).\n"
-                    "3. Ou clic droit sur un fichier > DragShift.")
+        self.notify(tr("DragShift — mode d'emploi"),
+                    tr("1. Glisse un fichier + Shift, lâche-le sur un format.\n"
+                       "2. Réappuie sur Shift : outils (Rogner, Fond, Compresser…).\n"
+                       "3. Ou clic droit sur un fichier > Convertir en."))
         if REPO_URL:
             QDesktopServices.openUrl(QUrl(REPO_URL))
         elif (HERE / "README.md").exists():
@@ -670,25 +673,25 @@ class App(QObject):
         job.sig.done.connect(lambda l, o, e, j=job: (self.jobs.remove(j), self.finished(l, o, e)))
         self.jobs.append(job)
         self.running += 1
-        self.tray.setToolTip(f"{APP} — {self.running} tâche(s) en cours…")
+        self.tray.setToolTip(f"{APP} — {tr('{n} tâche(s) en cours…', n=self.running)}")
         if key in ("transcribe", "docx", "rembg") or actions.category(files[0]) == "video":
-            self.notify(APP, f"{label.capitalize()} en cours : {Path(files[0]).name}")
+            self.notify(APP, tr("{label} en cours : {name}", label=label, name=Path(files[0]).name))
         self.pool.start(job)
 
     def finished(self, label, outs, err):
         if self.running:
             self.running -= 1
-        self.tray.setToolTip(f"{APP} — " + (f"{self.running} tâche(s) en cours…" if self.running
-                                            else "glisse un fichier + Shift"))
+        self.tray.setToolTip(f"{APP} — " + (tr("{n} tâche(s) en cours…", n=self.running) if self.running
+                                            else tr("glisse un fichier + Shift")))
         if err:
-            self.notify(f"{APP} — échec", err[:250], True)
+            self.notify(tr("{app} — échec", app=APP), err[:250], True)
             return
         if not outs:
             return
         self.last_out = outs[-1]
         names = ", ".join(Path(o).name for o in outs[:3]) + (f" (+{len(outs) - 3})" if len(outs) > 3 else "")
         size = actions.human(sum(Path(o).stat().st_size for o in outs if Path(o).exists()))
-        self.notify(f"✓ {names}", f"{size} — clique pour afficher dans l'Explorateur")
+        self.notify(f"✓ {names}", tr("{size} — clique pour afficher dans l'Explorateur", size=size))
 
 
 # ============================================================ démarrage auto
@@ -724,7 +727,7 @@ def main():
     if "--uninstall" in sys.argv:
         shellmenu.uninstall(modern=True)
         set_autostart(False)
-        print("DragShift désinstallé (clic droit + démarrage auto). Le dossier peut être supprimé.")
+        print(tr("DragShift désinstallé (clic droit + démarrage auto). Le dossier peut être supprimé."))
         return
     if "--make-icon" in sys.argv:  # régénère assets/dragshift.png (converti en .ico par magick)
         qapp = QApplication(sys.argv)
@@ -735,7 +738,7 @@ def main():
     if "--install" in sys.argv:
         install_status = shellmenu.install()
         set_autostart(True)
-        print(f"DragShift installé ({install_status}) + lancement au démarrage.")
+        print(tr("DragShift installé ({status}) + lancement au démarrage.", status=install_status))
     mutex = ctypes.windll.kernel32.CreateMutexW(None, False, "Local\\DragShiftSingleInstance")
     if ctypes.windll.kernel32.GetLastError() == 183:  # déjà lancé
         return
@@ -753,8 +756,11 @@ def main():
         app.a_shell.setChecked(True)  # déclenche shellmenu.install
         first_run.parent.mkdir(exist_ok=True)
         first_run.touch()
+    elif shellmenu.needs_refresh():
+        # le clic droit a été installé dans l'autre langue : on le réécrit, sans bloquer le démarrage
+        threading.Thread(target=shellmenu.install, daemon=True).start()
     app.notify(APP, install_status.capitalize() + "." if install_status else
-               "Prêt. Glisse un fichier + Shift, ou clic droit sur un fichier > Convertir en.")
+               tr("Prêt. Glisse un fichier + Shift, ou clic droit sur un fichier > Convertir en."))
     sys.exit(qapp.exec())
 
 

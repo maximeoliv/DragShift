@@ -14,6 +14,7 @@ import winreg
 from pathlib import Path
 
 import actions
+from i18n import LANG, tr
 
 HERE = Path(__file__).resolve().parent
 PIPE_NAME = f"DragShift-{os.environ.get('USERNAME', 'user')}"  # doit correspondre à send.pyw
@@ -30,25 +31,25 @@ FORMAT_ORDER = ["pdf", "jpg", "png", "webp", "avif", "gif", "ico", "bmp", "tiff"
                 "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv", "txt", "md", "html",
                 "mp4", "webm", "mov", "mkv", "mp3", "wav", "flac", "ogg", "m4a", "opus"]
 FORMAT_LABELS = {
-    "pdf": "PDF", "jpg": "JPG", "png": "PNG", "webp": "WEBP", "avif": "AVIF", "ico": "ICO (icône)",
+    "pdf": "PDF", "jpg": "JPG", "png": "PNG", "webp": "WEBP", "avif": "AVIF", "ico": tr("ICO (icône)"),
     "bmp": "BMP", "tiff": "TIFF", "docx": "Word (DOCX)", "odt": "LibreOffice (ODT)",
     "pptx": "PowerPoint (PPTX)", "odp": "LibreOffice Impress (ODP)", "xlsx": "Excel (XLSX)",
-    "ods": "LibreOffice Calc (ODS)", "csv": "CSV", "txt": "Texte brut (TXT)", "md": "Markdown (MD)",
-    "html": "Page web (HTML)", "mp4": "MP4", "webm": "WEBM", "mov": "MOV", "mkv": "MKV",
+    "ods": "LibreOffice Calc (ODS)", "csv": "CSV", "txt": tr("Texte brut (TXT)"), "md": "Markdown (MD)",
+    "html": tr("Page web (HTML)"), "mp4": "MP4", "webm": "WEBM", "mov": "MOV", "mkv": "MKV",
     "mp3": "MP3", "wav": "WAV", "flac": "FLAC", "ogg": "OGG", "m4a": "M4A", "opus": "OPUS",
 }
-VIDEO_LABELS = {"gif": "GIF animé", "mp3": "MP3 (audio seul)", "wav": "WAV (audio seul)"}
-TOOLS_TITLE = {"image": "Modifier l'image", "pdf": "Modifier le PDF", "video": "Modifier la vidéo",
-               "audio": "Modifier l'audio"}
+VIDEO_LABELS = {"gif": tr("GIF animé"), "mp3": tr("MP3 (audio seul)"), "wav": tr("WAV (audio seul)")}
+TOOLS_TITLE = {"image": tr("Modifier l'image"), "pdf": tr("Modifier le PDF"), "video": tr("Modifier la vidéo"),
+               "audio": tr("Modifier l'audio")}
 TOOL_ORDER = ["crop", "compress", "addbg", "rembg", "rotate", "exif", "edit", "merge",
               "720p", "mute", "thumb", "normalize", "transcribe"]
-TOOL_MENU = {
+TOOL_MENU = {k: tr(v) for k, v in {
     "compress": "Compresser", "crop": "Rogner…", "addbg": "Ajouter un fond…",
     "rembg": "Détourer (enlever le fond)", "exif": "Supprimer les métadonnées", "rotate": "Pivoter de 90°",
     "edit": "Éditer dans Paint", "merge": "Fusionner les PDF sélectionnés", "mute": "Couper le son",
     "720p": "Réduire en 720p", "thumb": "Extraire une miniature", "transcribe": "Transcrire en sous-titres (.srt)",
     "normalize": "Normaliser le volume",
-}
+}.items()}
 
 
 def _pythonw():
@@ -119,12 +120,12 @@ def install():
         shell = SHELL.format(ext=ext)
         conv_items, tools_title, tool_items = _menus(ext)
         conv = f"{shell}\\{VERB_CONVERT}"
-        _set(conv, {"MUIVerb": "Convertir en", "Icon": str(ICON), "SubCommands": "",
+        _set(conv, {"MUIVerb": tr("Convertir en"), "Icon": str(ICON), "SubCommands": "",
                     "MultiSelectModel": "Player"})
         for key, label, action in conv_items:
             _add_item(conv, key, label, action)
         # le menu radial reste accessible, mais tout en bas et discret
-        _add_item(conv, "z_menu", "Menu rapide (DragShift)…", "menu", SEPARATOR_BEFORE, icon=True)
+        _add_item(conv, "z_menu", tr("Menu rapide (DragShift)…"), "menu", SEPARATOR_BEFORE, icon=True)
         if tool_items:
             tl = f"{shell}\\{VERB_TOOLS}"
             _set(tl, {"MUIVerb": tools_title, "Icon": str(ICON), "SubCommands": "",
@@ -132,7 +133,7 @@ def install():
             for key, label, action in tool_items:
                 _add_item(tl, key, label, action)
     _refresh_explorer()
-    return install_modern() if modern_supported() else "menu classique installé (Windows 10)"
+    return install_modern() if modern_supported() else tr("menu classique installé (Windows 10)")
 
 
 # ------------------------------------------------------------------ menu moderne de Windows 11
@@ -143,9 +144,9 @@ PACKAGE_VERSION = "1.3.0.0"
 # sous un sous-menu « DragShift › » (constaté en test avec un seul paquet, puis avec deux paquets du même éditeur).
 PACKAGES = [  # (nom, verbe, CLSID, éditeur, nom affiché)
     ("DragShift.Convert", "DragShiftConvert", "22E1DDD1-42FE-4A5F-B9B7-0A94AA9566F5",
-     "CN=DragShift Convert", "DragShift (Convertir en)"),
+     "CN=DragShift Convert", tr("DragShift (Convertir en)")),
     ("DragShift.Tools", "DragShiftTools", "8714DB24-1431-4FFF-82F5-E496EBF6393F",
-     "CN=DragShift Tools", "DragShift (Modifier)"),
+     "CN=DragShift Tools", tr("DragShift (Modifier)")),
 ]
 OLD_PACKAGES = ["DragShift.ContextMenu"]  # première version à un seul paquet
 
@@ -170,10 +171,11 @@ def write_modern_config():
              f"#icon\t{ICON}"]
     for ext in _extensions():
         conv_items, tools_title, tool_items = _menus(ext)
+        title = tr("Convertir en")
         for _, label, action in conv_items:
-            lines.append(f"{ext}\tconvert\tConvertir en\t{action}\t{label}")
-        lines.append(f"{ext}\tconvert\tConvertir en\t-\t-")  # séparateur
-        lines.append(f"{ext}\tconvert\tConvertir en\tmenu\tMenu rapide (DragShift)…")
+            lines.append(f"{ext}\tconvert\t{title}\t{action}\t{label}")
+        lines.append(f"{ext}\tconvert\t{title}\t-\t-")  # séparateur
+        lines.append(f"{ext}\tconvert\t{title}\tmenu\t{tr('Menu rapide (DragShift)…')}")
         for _, label, action in tool_items:
             lines.append(f"{ext}\ttools\t{tools_title}\t{action}\t{label}")
     (WINMENU / "menu.tsv").write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -191,8 +193,8 @@ def developer_mode():
 def install_modern():
     write_modern_config()
     if not developer_mode():
-        return ("menu classique installé ; pour le menu moderne de Windows 11, active le mode développeur "
-                "(Paramètres > Système > Espace développeurs) puis relance l'installation")
+        return tr("menu classique installé ; pour le menu moderne de Windows 11, active le mode développeur "
+                  "(Paramètres > Système > Espace développeurs) puis relance l'installation")
     template = (WINMENU / "AppxManifest.template.xml").read_text(encoding="utf-8")
     for old in OLD_PACKAGES:
         _powershell(f"Get-AppxPackage {old} | Remove-AppxPackage")
@@ -204,13 +206,18 @@ def install_modern():
             (pkg / "Assets" / logo.name).write_bytes(logo.read_bytes())
         manifest = (template.replace("{NAME}", name).replace("{VERB}", verb).replace("{CLSID}", clsid)
                     .replace("{PUBLISHER}", publisher).replace("{DISPLAYNAME}", display)
-                    .replace("{DESCRIPTION}", display).replace("{VERSION}", PACKAGE_VERSION))
+                    .replace("{DESCRIPTION}", display).replace("{VERSION}", PACKAGE_VERSION)
+                    .replace("{LANGUAGE}", "fr-FR" if LANG == "fr" else "en-US"))
         (pkg / "AppxManifest.xml").write_text(manifest, encoding="utf-8")
-        r = _powershell(f"Add-AppxPackage -Register {_ps_quote(pkg / 'AppxManifest.xml')} "
+        # en mode développeur, Windows refuse de réinscrire la même version si le manifeste a changé
+        # (langue, nom affiché…) : on retire d'abord l'ancienne inscription
+        r = _powershell(f"Get-AppxPackage {name} | Remove-AppxPackage; "
+                        f"Add-AppxPackage -Register {_ps_quote(pkg / 'AppxManifest.xml')} "
                         f"-ExternalLocation {_ps_quote(WINMENU)} -ForceUpdateFromAnyVersion")
         if r.returncode != 0:
-            return f"menu moderne : échec de l'enregistrement de {name} : " + (r.stderr or r.stdout).strip()[-400:]
-    return "menus classique et moderne installés"
+            return tr("menu moderne : échec de l'enregistrement de {name} : ", name=name) + \
+                (r.stderr or r.stdout).strip()[-400:]
+    return tr("menus classique et moderne installés")
 
 
 def uninstall_modern():
@@ -237,5 +244,14 @@ def is_installed():
     try:
         winreg.OpenKey(HKCU, f"{SHELL.format(ext='png')}\\{VERB_CONVERT}").Close()
         return True
+    except OSError:
+        return False
+
+
+def needs_refresh():
+    """Menu installé dans une autre langue que l'interface (langue de Windows changée, DRAGSHIFT_LANG) ?"""
+    try:
+        with winreg.OpenKey(HKCU, f"{SHELL.format(ext='png')}\\{VERB_CONVERT}") as k:
+            return winreg.QueryValueEx(k, "MUIVerb")[0] != tr("Convertir en")
     except OSError:
         return False

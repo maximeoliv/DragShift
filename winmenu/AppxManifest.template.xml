@@ -19,7 +19,7 @@
     <uap10:AllowExternalContent>true</uap10:AllowExternalContent>
   </Properties>
   <Resources>
-    <Resource Language="fr-FR"/>
+    <Resource Language="{LANGUAGE}"/>
   </Resources>
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26200.0"/>

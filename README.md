@@ -84,6 +84,12 @@ graphique NVIDIA si elle est disponible).
 - Les fichiers produits sont nommés comme dans la démo : `Photo.jpg`, `Photo Compressed.png`, `Photo Cropped.png`,
   `img01 et 20 autres.pdf`… sans jamais écraser un fichier existant.
 
+## D'où vient l'idée
+
+Le geste « glisser + Shift » vient de [**Tangerine**](https://tangerineformac.com/), une app Mac créée par
+[thameem (@th2049)](https://x.com/th2049). DragShift est une réimplémentation indépendante pour Windows, écrite de zéro
+et sans lien avec Tangerine. **Si tu es sur Mac, utilise l'original.**
+
 ## Licence
 
-[MIT](LICENSE). Idée inspirée d'une [démo macOS vue sur X](https://x.com/th2049/status/2111477585461039241).
+[MIT](LICENSE).

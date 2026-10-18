@@ -1,0 +1,8 @@
+PySide6-Essentials>=6.7
+numpy
+Pillow
+PyMuPDF
+pdf2docx
+# Optionnels :
+# rembg            -> outil « Détourer »
+# faster-whisper   -> outil « Transcrire » (GPU NVIDIA si disponible)

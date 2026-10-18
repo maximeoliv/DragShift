@@ -14,18 +14,18 @@ from PySide6.QtWidgets import (QButtonGroup, QColorDialog, QDialog, QGridLayout,
 
 import actions
 
-ACCENT = "#ef4b2b"
+ACCENT = "#5b54f0"
 
 STYLE = f"""
-QWidget {{ color: #3a2118; font-family: 'Segoe UI Variable Text', 'Segoe UI'; font-size: 12px; }}
+QWidget {{ color: #1e1b4b; font-family: 'Segoe UI Variable Text', 'Segoe UI'; font-size: 12px; }}
 QLabel#title {{ font-weight: 600; font-size: 13px; }}
-QLabel#muted {{ color: #7a5548; }}
+QLabel#muted {{ color: #5b5f8a; }}
 QPushButton {{ background: rgba(255,255,255,150); border: 1px solid rgba(255,255,255,200);
                border-radius: 7px; padding: 4px 10px; }}
 QPushButton:hover {{ background: rgba(255,255,255,210); }}
 QPushButton:checked {{ background: {ACCENT}; color: white; border-color: {ACCENT}; }}
 QPushButton#primary {{ background: {ACCENT}; color: white; border-color: {ACCENT}; font-weight: 600; padding: 6px 16px; }}
-QPushButton#primary:hover {{ background: #ff5d3b; }}
+QPushButton#primary:hover {{ background: #6d67ff; }}
 QPushButton#close {{ background: transparent; border: none; font-size: 15px; padding: 0 6px; }}
 QSpinBox {{ background: rgba(255,255,255,170); border: 1px solid rgba(255,255,255,220); border-radius: 6px;
             padding: 3px 6px; min-width: 64px; }}
@@ -89,9 +89,9 @@ class Panel(QDialog):
         p.setRenderHint(QPainter.Antialiasing)
         r = QRectF(self.rect()).adjusted(1, 1, -1, -1)
         g = QLinearGradient(r.topLeft(), r.bottomRight())
-        g.setColorAt(0, QColor(255, 214, 160, 250))
-        g.setColorAt(0.55, QColor(255, 176, 150, 250))
-        g.setColorAt(1, QColor(240, 160, 190, 250))
+        g.setColorAt(0, QColor(236, 238, 255, 250))
+        g.setColorAt(0.55, QColor(222, 228, 255, 250))
+        g.setColorAt(1, QColor(236, 226, 255, 250))
         p.setBrush(g)
         p.setPen(QPen(QColor(255, 255, 255, 190), 1))
         p.drawRoundedRect(r, 16, 16)
@@ -280,7 +280,7 @@ class CropView(QWidget):
         path.addRect(img_r)
         inner = QPainterPath()
         inner.addRect(sel)
-        p.fillPath(path.subtracted(inner), QColor(40, 30, 30, 150))
+        p.fillPath(path.subtracted(inner), QColor(20, 20, 50, 150))
         p.setPen(QPen(QColor(ACCENT), 2))
         p.setBrush(Qt.NoBrush)
         p.drawRect(sel)
@@ -377,11 +377,11 @@ class CropDialog(Panel):
 # ======================================================================= Fond
 
 GRADIENTS = [
-    [(255, 196, 92), (255, 94, 98), (176, 107, 255)],   # sunset
-    [(255, 236, 160), (255, 154, 139), (255, 106, 136)],
+    [(102, 126, 234), (118, 75, 162)],                   # indigo / violet (par défaut)
     [(132, 250, 176), (143, 211, 244)],
     [(161, 196, 253), (194, 233, 251)],
-    [(102, 126, 234), (118, 75, 162)],
+    [(255, 196, 92), (255, 94, 98), (176, 107, 255)],   # coucher de soleil
+    [(255, 236, 160), (255, 154, 139), (255, 106, 136)],
     [(250, 208, 196), (255, 209, 255)],
     [(15, 32, 39), (44, 83, 100)],
     [(252, 92, 125), (106, 130, 251)],

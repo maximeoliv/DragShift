@@ -285,11 +285,11 @@ class Radial(QWidget):
         # ombre portée + disque givré
         for i in range(8):
             p.setPen(Qt.NoPen)
-            p.setBrush(QColor(60, 20, 10, 9))
+            p.setBrush(QColor(20, 20, 70, 10))
             p.drawEllipse(c + QPointF(0, 6), RO + 14 + i * 2.2, RO + 14 + i * 2.2)
         g = QRadialGradient(c, RO + 14)
-        g.setColorAt(0, QColor(255, 240, 228, 150))
-        g.setColorAt(1, QColor(255, 222, 205, 190))
+        g.setColorAt(0, QColor(244, 245, 255, 155))
+        g.setColorAt(1, QColor(226, 229, 255, 195))
         p.setBrush(g)
         p.setPen(QPen(QColor(255, 255, 255, 200), 1.2))
         p.drawEllipse(c, RO + 12, RO + 12)
@@ -310,18 +310,18 @@ class Radial(QWidget):
             if hovered:
                 gr = QLinearGradient(c, c + QPointF(math.sin(math.radians(i * step)) * RO,
                                                     -math.cos(math.radians(i * step)) * RO))
-                gr.setColorAt(0, QColor(255, 120, 70))
-                gr.setColorAt(1, QColor(228, 48, 28))
+                gr.setColorAt(0, QColor(129, 120, 255))
+                gr.setColorAt(1, QColor(79, 70, 229))
                 p.setBrush(gr)
                 p.setPen(QPen(QColor(255, 255, 255, 230), 1.4))
             else:
-                p.setBrush(QColor(255, 246, 240, int(215 * s)))
+                p.setBrush(QColor(250, 250, 255, int(218 * s)))
                 p.setPen(QPen(QColor(255, 255, 255, 220), 1))
             p.drawPath(path)
             mid = math.radians(i * step + rot)
             rm = (RI + RO) / 2 + 4
             pc = QPointF(c.x() + rm * math.sin(mid), c.y() - rm * math.cos(mid))
-            col = QColor(255, 255, 255) if hovered else QColor(92, 44, 30)
+            col = QColor(255, 255, 255) if hovered else QColor(49, 46, 110)
             col.setAlphaF(s)
             p.setPen(col)
             if icon and self.icon_family:
@@ -334,15 +334,15 @@ class Radial(QWidget):
                 p.drawText(QRectF(pc.x() - 50, pc.y() - 10, 100, 20), Qt.AlignCenter, label)
 
         if not n:  # anneau vide en attendant le DragEnter
-            p.setBrush(QColor(255, 246, 240, 120))
+            p.setBrush(QColor(250, 250, 255, 120))
             p.setPen(QPen(QColor(255, 255, 255, 200), 1, Qt.DashLine))
             p.drawEllipse(c, (RO + RI) / 2 + 30, (RO + RI) / 2 + 30)
 
         # centre
         center_hot = self.hover == "center"
         g = QRadialGradient(c - QPointF(0, RC * 0.4), RC * 1.4)
-        g.setColorAt(0, QColor(255, 196, 150) if not center_hot else QColor(255, 150, 110))
-        g.setColorAt(1, QColor(246, 150, 110) if not center_hot else QColor(232, 82, 50))
+        g.setColorAt(0, QColor(150, 142, 255) if not center_hot else QColor(124, 112, 255))
+        g.setColorAt(1, QColor(99, 90, 240) if not center_hot else QColor(67, 56, 202))
         p.setBrush(g)
         p.setPen(QPen(QColor(255, 255, 255, 230), 1.6))
         p.drawEllipse(c, RC, RC)
@@ -485,8 +485,8 @@ def draw_icon(size):
     p.setRenderHint(QPainter.Antialiasing)
     k = size / 64
     g = QLinearGradient(0, 0, size, size)
-    g.setColorAt(0, QColor(255, 176, 72))
-    g.setColorAt(1, QColor(226, 52, 38))
+    g.setColorAt(0, QColor(129, 140, 248))
+    g.setColorAt(1, QColor(109, 40, 217))
     p.setBrush(g)
     p.setPen(Qt.NoPen)
     p.drawEllipse(QRectF(1 * k, 1 * k, 62 * k, 62 * k))

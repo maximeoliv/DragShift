@@ -1,0 +1,4 @@
+LIBRARY DragShiftMenu
+EXPORTS
+    DllGetClassObject PRIVATE
+    DllCanUnloadNow PRIVATE

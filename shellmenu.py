@@ -1,11 +1,14 @@
 """Entrées du clic droit de l'Explorateur : « Convertir en ▸ » et « Modifier l'image ▸ » (ou PDF, vidéo…).
 
 Le nom DragShift n'apparaît pas au premier niveau : quelqu'un à qui on installe l'outil doit juste
-voir « Convertir en ». Écrit dans HKCU (pas besoin des droits admin), seulement pour les extensions gérées.
-Sous Windows 11 ces entrées sont dans « Afficher d'autres options » (ou directement avec Shift + clic droit).
+voir « Convertir en ». Deux mécanismes, mêmes entrées :
+  - menu classique : verbes dans HKCU (Windows 10, et « Afficher d'autres options » sous Windows 11) ;
+  - menu moderne de Windows 11 : paquet « sparse » + DragShiftMenu.dll (dossier winmenu/), qui lit
+    winmenu/menu.tsv. Sans signature, Windows ne l'accepte qu'en mode développeur.
 """
 import ctypes
 import os
+import subprocess
 import sys
 import winreg
 from pathlib import Path
@@ -94,39 +97,138 @@ def _refresh_explorer():
     ctypes.windll.shell32.SHChangeNotify(0x08000000, 0, None, None)  # SHCNE_ASSOCCHANGED
 
 
+def _menus(ext):
+    """Entrées pour une extension : ([(clé, libellé, action)] formats, titre outils, [(clé, libellé, action)] outils)."""
+    sample = f"x.{ext}"
+    cat = actions.category(sample)
+    conv = []
+    for f in sorted(actions.formats_for(sample), key=FORMAT_ORDER.index):
+        label = (VIDEO_LABELS.get(f) if cat == "video" else None) or FORMAT_LABELS.get(f, f.upper())
+        if f == "gif" and cat == "image":
+            label = "GIF"
+        conv.append((f"f{FORMAT_ORDER.index(f):02d}_{f}", label, f"convert:{f}"))
+    tools = actions.tools_for([sample]) + (["merge"] if cat == "pdf" else [])
+    tl = [(f"t{TOOL_ORDER.index(t):02d}_{t}", TOOL_MENU[t], f"tool:{t}") for t in sorted(tools, key=TOOL_ORDER.index)]
+    return conv, TOOLS_TITLE.get(cat), tl
+
+
 def install():
+    """Installe le menu classique, et le menu moderne sous Windows 11. Renvoie un message d'état."""
     uninstall(refresh=False)  # repart de zéro (formats/outils ont pu changer)
     for ext in _extensions():
-        sample = f"x.{ext}"
-        cat = actions.category(sample)
         shell = SHELL.format(ext=ext)
-
+        conv_items, tools_title, tool_items = _menus(ext)
         conv = f"{shell}\\{VERB_CONVERT}"
         _set(conv, {"MUIVerb": "Convertir en", "Icon": str(ICON), "SubCommands": "",
                     "MultiSelectModel": "Player"})
-        fmts = sorted(actions.formats_for(sample), key=FORMAT_ORDER.index)
-        for f in fmts:
-            label = (VIDEO_LABELS.get(f) if cat == "video" else None) or FORMAT_LABELS.get(f, f.upper())
-            if f == "gif" and cat == "image":
-                label = "GIF"
-            _add_item(conv, f"f{FORMAT_ORDER.index(f):02d}_{f}", label, f"convert:{f}")
+        for key, label, action in conv_items:
+            _add_item(conv, key, label, action)
         # le menu radial reste accessible, mais tout en bas et discret
         _add_item(conv, "z_menu", "Menu rapide (DragShift)…", "menu", SEPARATOR_BEFORE, icon=True)
-
-        tools = actions.tools_for([sample]) + (["merge"] if cat == "pdf" else [])
-        if tools:
+        if tool_items:
             tl = f"{shell}\\{VERB_TOOLS}"
-            _set(tl, {"MUIVerb": TOOLS_TITLE[cat], "Icon": str(ICON), "SubCommands": "",
+            _set(tl, {"MUIVerb": tools_title, "Icon": str(ICON), "SubCommands": "",
                       "MultiSelectModel": "Player"})
-            for t in sorted(tools, key=TOOL_ORDER.index):
-                _add_item(tl, f"t{TOOL_ORDER.index(t):02d}_{t}", TOOL_MENU[t], f"tool:{t}")
+            for key, label, action in tool_items:
+                _add_item(tl, key, label, action)
     _refresh_explorer()
+    return install_modern() if modern_supported() else "menu classique installé (Windows 10)"
 
 
-def uninstall(refresh=True):
+# ------------------------------------------------------------------ menu moderne de Windows 11
+
+WINMENU = HERE / "winmenu"
+PACKAGE_VERSION = "1.3.0.0"
+# Un paquet par entrée racine, chacun avec son éditeur et son nom : sinon Windows 11 regroupe les entrées
+# sous un sous-menu « DragShift › » (constaté en test avec un seul paquet, puis avec deux paquets du même éditeur).
+PACKAGES = [  # (nom, verbe, CLSID, éditeur, nom affiché)
+    ("DragShift.Convert", "DragShiftConvert", "22E1DDD1-42FE-4A5F-B9B7-0A94AA9566F5",
+     "CN=DragShift Convert", "DragShift (Convertir en)"),
+    ("DragShift.Tools", "DragShiftTools", "8714DB24-1431-4FFF-82F5-E496EBF6393F",
+     "CN=DragShift Tools", "DragShift (Modifier)"),
+]
+OLD_PACKAGES = ["DragShift.ContextMenu"]  # première version à un seul paquet
+
+
+def modern_supported():
+    return sys.getwindowsversion().build >= 22000
+
+
+def _powershell(command):
+    return subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
+                          capture_output=True, text=True, encoding="utf-8", errors="replace",
+                          creationflags=0x08000000)
+
+
+def _ps_quote(path):
+    return "'" + str(path).replace("'", "''") + "'"
+
+
+def write_modern_config():
+    """menu.tsv : ce que DragShiftMenu.dll affiche, et comment lancer DragShift."""
+    lines = [f"#python\t{_pythonw()}", f"#send\t{HERE / 'send.pyw'}", f"#app\t{HERE / 'dragshift.pyw'}",
+             f"#icon\t{ICON}"]
+    for ext in _extensions():
+        conv_items, tools_title, tool_items = _menus(ext)
+        for _, label, action in conv_items:
+            lines.append(f"{ext}\tconvert\tConvertir en\t{action}\t{label}")
+        lines.append(f"{ext}\tconvert\tConvertir en\t-\t-")  # séparateur
+        lines.append(f"{ext}\tconvert\tConvertir en\tmenu\tMenu rapide (DragShift)…")
+        for _, label, action in tool_items:
+            lines.append(f"{ext}\ttools\t{tools_title}\t{action}\t{label}")
+    (WINMENU / "menu.tsv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def developer_mode():
+    try:
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                            r"SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock") as k:
+            return winreg.QueryValueEx(k, "AllowDevelopmentWithoutDevLicense")[0] == 1
+    except OSError:
+        return False
+
+
+def install_modern():
+    write_modern_config()
+    if not developer_mode():
+        return ("menu classique installé ; pour le menu moderne de Windows 11, active le mode développeur "
+                "(Paramètres > Système > Espace développeurs) puis relance l'installation")
+    template = (WINMENU / "AppxManifest.template.xml").read_text(encoding="utf-8")
+    for old in OLD_PACKAGES:
+        _powershell(f"Get-AppxPackage {old} | Remove-AppxPackage")
+    for name, verb, clsid, publisher, display in PACKAGES:
+        # chaque paquet a son dossier (avec ses logos) ; DLL et exe sont partagés via -ExternalLocation
+        pkg = WINMENU / "pkg" / name
+        (pkg / "Assets").mkdir(parents=True, exist_ok=True)
+        for logo in (WINMENU / "Assets").iterdir():
+            (pkg / "Assets" / logo.name).write_bytes(logo.read_bytes())
+        manifest = (template.replace("{NAME}", name).replace("{VERB}", verb).replace("{CLSID}", clsid)
+                    .replace("{PUBLISHER}", publisher).replace("{DISPLAYNAME}", display)
+                    .replace("{DESCRIPTION}", display).replace("{VERSION}", PACKAGE_VERSION))
+        (pkg / "AppxManifest.xml").write_text(manifest, encoding="utf-8")
+        r = _powershell(f"Add-AppxPackage -Register {_ps_quote(pkg / 'AppxManifest.xml')} "
+                        f"-ExternalLocation {_ps_quote(WINMENU)} -ForceUpdateFromAnyVersion")
+        if r.returncode != 0:
+            return f"menu moderne : échec de l'enregistrement de {name} : " + (r.stderr or r.stdout).strip()[-400:]
+    return "menus classique et moderne installés"
+
+
+def uninstall_modern():
+    for name in [p[0] for p in PACKAGES] + OLD_PACKAGES:
+        _powershell(f"Get-AppxPackage {name} | Remove-AppxPackage")
+
+
+def is_modern_installed():
+    r = _powershell(f"if (Get-AppxPackage {PACKAGES[0][0]}) {{ 'oui' }}")
+    return r.stdout.strip() == "oui"
+
+
+def uninstall(refresh=True, modern=False):
     for ext in _extensions():
         for verb in (VERB_CONVERT, VERB_TOOLS, *LEGACY_VERBS):
             _delete_tree(f"{SHELL.format(ext=ext)}\\{verb}")
+    if modern:
+        uninstall_modern()
     if refresh:
         _refresh_explorer()
 

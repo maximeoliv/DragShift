@@ -117,6 +117,10 @@ class Panel(QDialog):
         pass
 
     def show_centered(self):
+        # Entrée = bouton principal (Appliquer, Enregistrer…), jamais le ✕ ni un bouton de réglage
+        for b in self.findChildren(QPushButton):
+            b.setAutoDefault(False)
+            b.setDefault(b.objectName() == "primary")
         self.adjustSize()
         from PySide6.QtGui import QCursor
         from PySide6.QtWidgets import QApplication

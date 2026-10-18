@@ -1,2 +1,6 @@
 __pycache__/
 *.pyc
+# générés à l'installation, propres à chaque machine
+winmenu/menu.tsv
+winmenu/pkg/
+winmenu/microsoft.system.package.metadata/

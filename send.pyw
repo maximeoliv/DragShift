@@ -19,9 +19,20 @@ def main():
     if len(sys.argv) < 3:
         return
     action, paths = sys.argv[1], sys.argv[2:]
+    complete = False
+    if len(paths) == 1 and paths[0].startswith("@"):
+        # menu moderne de Windows 11 : toute la sélection arrive d'un coup, dans un fichier temporaire
+        listfile = paths[0][1:]
+        with open(listfile, encoding="utf-8") as f:
+            paths = [line for line in f.read().splitlines() if line]
+        os.remove(listfile)
+        complete = True
     # autorise DragShift à passer au premier plan (sinon Windows bloque l'affichage du menu)
     ctypes.windll.user32.AllowSetForegroundWindow(-1)
-    data = "".join(f"{action}\t{os.path.abspath(p)}\n" for p in paths).encode("utf-8")
+    lines = [f"{action}\t{os.path.abspath(p)}\n" for p in paths]
+    if complete:
+        lines.append("!flush\t\n")  # sélection complète : DragShift n'attend pas d'autres fichiers
+    data = "".join(lines).encode("utf-8")
     started = False
     deadline = time.time() + 20
     while time.time() < deadline:

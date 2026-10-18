@@ -27,9 +27,11 @@ ajouter un fond, détourer…
 vidéo, l'audio). Ça marche avec **plusieurs fichiers sélectionnés** : plusieurs images vers PDF, DragShift demande s'il
 faut faire *un seul PDF* ou *un PDF par image*.
 
-<p align="center"><img src="docs/clic-droit.png" width="551" alt="Menu clic droit : Convertir en, Modifier l'image"></p>
+<p align="center"><img src="docs/clic-droit-win11.png" width="590" alt="Menu clic droit de Windows 11 : Convertir en, Modifier l'image › Rogner, Compresser…"></p>
 
-> Sous Windows 11, ces entrées sont dans **Afficher d'autres options**, ou directement avec **Shift + clic droit**.
+> **Windows 11** : les entrées sont directement dans le nouveau menu si le **mode développeur** est activé
+> (*Paramètres › Système › Espace développeurs*), voir [pourquoi](#bon-à-savoir). Sinon, et sous Windows 10, elles
+> sont dans le menu classique (*Afficher d'autres options*, ou directement avec **Shift + clic droit**).
 
 L'original n'est jamais modifié ni déplacé. Tout se fait **en local**, rien n'est envoyé sur Internet.
 
@@ -68,6 +70,10 @@ py -m pip install -r requirements.txt
 pyw dragshift.pyw --install
 ```
 
+Pour avoir les entrées dans le **nouveau menu de Windows 11**, active le mode développeur *avant* l'étape 3
+(*Paramètres › Système › Espace développeurs › Mode développeur*). Sans lui, tout marche quand même, via le menu
+classique.
+
 Une icône apparaît dans la barre des tâches (près de l'horloge) : activer/désactiver, clic droit, démarrage auto, aide.
 
 **Optionnel :** `py -m pip install rembg` pour *Détourer*, `py -m pip install faster-whisper` pour *Transcrire* (utilise la carte
@@ -76,6 +82,12 @@ graphique NVIDIA si elle est disponible).
 **Désinstaller :** `py dragshift.pyw --uninstall` retire le clic droit et le démarrage auto, puis supprime le dossier.
 
 ## Bon à savoir
+
+- **Pourquoi le mode développeur pour le menu de Windows 11 ?** Le nouveau menu n'accepte que les extensions
+  livrées dans un paquet Windows signé. DragShift enregistre un petit paquet local non signé
+  ([`winmenu/`](winmenu/) : une DLL C++ et son code source), ce que Windows n'autorise qu'en mode développeur.
+  Les binaires sont fournis ; pour les recompiler : [`winmenu/build.sh`](winmenu/build.sh) avec
+  [llvm-mingw](https://github.com/mstorsjo/llvm-mingw).
 
 - **FancyZones (PowerToys)** utilise aussi Shift pendant qu'on déplace une fenêtre : pas de conflit, DragShift ne
   s'ouvre que pendant un vrai glisser-déposer de fichier.

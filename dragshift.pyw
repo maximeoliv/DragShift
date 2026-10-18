@@ -11,6 +11,7 @@ import math
 import os
 import subprocess
 import sys
+import time
 import traceback
 import winreg
 from pathlib import Path
@@ -551,6 +552,10 @@ class App(QObject):
                     line, _, rest = bytes(buf).partition(b"\n")
                     buf[:] = rest
                     action, _, path = line.decode("utf-8", "replace").partition("\t")
+                    if action == "!flush":  # sélection complète (menu moderne) : pas besoin d'attendre
+                        self.flush_timer.stop()
+                        QTimer.singleShot(0, self._flush)
+                        continue
                     if path and os.path.isfile(path):
                         lst = self.pending.setdefault(action, [])
                         if path not in lst:
@@ -566,7 +571,7 @@ class App(QObject):
     def _flush(self):
         pending, self.pending = self.pending, {}
         for action, paths in pending.items():
-            print(f"clic droit : {action} sur {len(paths)} fichier(s)", file=sys.stderr, flush=True)
+            print(f"{time.strftime('%H:%M:%S')}.{int(time.time() * 1000) % 1000:03d} clic droit : {action} sur {len(paths)} fichier(s)", file=sys.stderr, flush=True)
             kind, _, key = action.partition(":")
             if kind == "menu":
                 self.click_radial.popup(paths)
@@ -591,7 +596,7 @@ class App(QObject):
         self.a_boot.toggled.connect(set_autostart)
         self.a_shell = QAction("Entrée « DragShift » au clic droit", m, checkable=True,
                                checked=shellmenu.is_installed())
-        self.a_shell.toggled.connect(lambda v: shellmenu.install() if v else shellmenu.uninstall())
+        self.a_shell.toggled.connect(lambda v: shellmenu.install() if v else shellmenu.uninstall(modern=True))
         m.addAction(self.a_enabled)
         m.addAction(self.a_boot)
         m.addAction(self.a_shell)
@@ -717,7 +722,7 @@ def set_autostart(on):
 
 def main():
     if "--uninstall" in sys.argv:
-        shellmenu.uninstall()
+        shellmenu.uninstall(modern=True)
         set_autostart(False)
         print("DragShift désinstallé (clic droit + démarrage auto). Le dossier peut être supprimé.")
         return
@@ -726,10 +731,11 @@ def main():
         (HERE / "assets").mkdir(exist_ok=True)
         draw_icon(256).save(str(HERE / "assets" / "dragshift.png"))
         return
+    install_status = None
     if "--install" in sys.argv:
-        shellmenu.install()
+        install_status = shellmenu.install()
         set_autostart(True)
-        print("DragShift installé : clic droit + lancement au démarrage.")
+        print(f"DragShift installé ({install_status}) + lancement au démarrage.")
     mutex = ctypes.windll.kernel32.CreateMutexW(None, False, "Local\\DragShiftSingleInstance")
     if ctypes.windll.kernel32.GetLastError() == 183:  # déjà lancé
         return
@@ -747,7 +753,8 @@ def main():
         app.a_shell.setChecked(True)  # déclenche shellmenu.install
         first_run.parent.mkdir(exist_ok=True)
         first_run.touch()
-    app.notify(APP, "Prêt. Glisse un fichier + Shift, ou clic droit sur un fichier > DragShift.")
+    app.notify(APP, install_status.capitalize() + "." if install_status else
+               "Prêt. Glisse un fichier + Shift, ou clic droit sur un fichier > Convertir en.")
     sys.exit(qapp.exec())
 
 
